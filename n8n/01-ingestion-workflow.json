@@ -1,0 +1,142 @@
+{
+  "name": "Alinino RAG — 01 İndeksləmə (Ingestion)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b1a10000-0000-4000-8000-000000000001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-40, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sku, ad, qiymet, valyuta, stok, kateqoriya, tesvir, dil, url, embed_text\nFROM products\nWHERE needs_embedding = true AND deleted = false;",
+        "options": {}
+      },
+      "id": "b1a10000-0000-4000-8000-000000000002",
+      "name": "Postgres — məhsulları oxu",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [200, 300],
+      "credentials": {
+        "postgres": { "id": "REPLACE_POSTGRES_CRED", "name": "Postgres (alinino)" }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": { "__rl": true, "value": "alinino_products", "mode": "id" },
+        "options": {}
+      },
+      "id": "b1a10000-0000-4000-8000-000000000003",
+      "name": "Qdrant — insert",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [520, 300],
+      "credentials": {
+        "qdrantApi": { "id": "REPLACE_QDRANT_CRED", "name": "Qdrant API" }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "id": "b1a10000-0000-4000-8000-000000000004",
+      "name": "Embeddings Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [440, 520],
+      "credentials": {
+        "googlePalmApi": { "id": "REPLACE_GEMINI_CRED", "name": "Google Gemini API" }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "json",
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.embed_text }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              { "name": "sku", "value": "={{ $json.sku }}" },
+              { "name": "ad", "value": "={{ $json.ad }}" },
+              { "name": "qiymet", "value": "={{ $json.qiymet }}" },
+              { "name": "stok", "value": "={{ $json.stok }}" },
+              { "name": "kateqoriya", "value": "={{ $json.kateqoriya }}" },
+              { "name": "dil", "value": "={{ $json.dil }}" },
+              { "name": "url", "value": "={{ $json.url }}" }
+            ]
+          }
+        }
+      },
+      "id": "b1a10000-0000-4000-8000-000000000005",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [640, 520]
+    },
+    {
+      "parameters": {
+        "chunkSize": 800,
+        "chunkOverlap": 80,
+        "options": {}
+      },
+      "id": "b1a10000-0000-4000-8000-000000000006",
+      "name": "Recursive Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [820, 700]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE products SET needs_embedding = false\nWHERE needs_embedding = true AND deleted = false;",
+        "options": {}
+      },
+      "id": "b1a10000-0000-4000-8000-000000000008",
+      "name": "Postgres — embed olundu işarələ",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [820, 300],
+      "credentials": {
+        "postgres": { "id": "REPLACE_POSTGRES_CRED", "name": "Postgres (alinino)" }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## İNDEKSLƏMƏ AXINI (Faza 1)\n\n1. Əvvəlcə scraper-i işə salın:\n   `python scraper.py --limit 800 --postgres`\n2. Qdrant kolleksiyasını yaradın (bax: README, 768 ölçü, Cosine)\n3. Kredensialları qoşun: Postgres, Qdrant, Google Gemini\n4. Bu workflow-u işə salın — bütün məhsullar vektorlaşıb Qdrant-a yazılacaq.",
+        "height": 220,
+        "width": 360
+      },
+      "id": "b1a10000-0000-4000-8000-000000000007",
+      "name": "Qeyd",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-60, 20]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Postgres — məhsulları oxu", "type": "main", "index": 0 }]]
+    },
+    "Postgres — məhsulları oxu": {
+      "main": [[{ "node": "Qdrant — insert", "type": "main", "index": 0 }]]
+    },
+    "Qdrant — insert": {
+      "main": [[{ "node": "Postgres — embed olundu işarələ", "type": "main", "index": 0 }]]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [[{ "node": "Qdrant — insert", "type": "ai_embedding", "index": 0 }]]
+    },
+    "Default Data Loader": {
+      "ai_document": [[{ "node": "Qdrant — insert", "type": "ai_document", "index": 0 }]]
+    },
+    "Recursive Text Splitter": {
+      "ai_textSplitter": [[{ "node": "Default Data Loader", "type": "ai_textSplitter", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

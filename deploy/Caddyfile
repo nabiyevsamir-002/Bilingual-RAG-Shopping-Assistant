@@ -1,0 +1,7 @@
+# Avtomatik HTTPS (Let's Encrypt) + n8n-ə reverse proxy.
+# {$DOMAIN} .env-dəki DOMAIN dəyərindən gəlir.
+# WebSocket (n8n editor push) avtomatik dəstəklənir.
+{$DOMAIN} {
+	reverse_proxy n8n:5678
+	encode gzip
+}

@@ -1,0 +1,25 @@
+# Sirlər
+.env
+**/.env
+!**/.env.example
+
+# Scraper çıxışları (böyük data faylları)
+products.jsonl
+products.json
+scraper/products.jsonl
+scraper/products.json
+*.html
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Loglar
+*.log
+
+# IDE və macOS
+.idea/
+.DS_Store
+HANDOFF.md

@@ -1,0 +1,3 @@
+requests>=2.31.0
+# Postgres-ə yazmaq istəsəniz (opsional, --postgres bayrağı üçün):
+# psycopg2-binary>=2.9.9

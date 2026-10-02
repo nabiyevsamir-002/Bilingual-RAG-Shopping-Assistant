@@ -1,0 +1,66 @@
+# Alinino RAG — lokal / VPS infrastrukturu
+# İşə salmaq:  docker compose up -d
+# n8n:     http://localhost:5678
+# Qdrant:  http://localhost:6333/dashboard
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: n8n
+      POSTGRES_PASSWORD: n8n
+      POSTGRES_DB: alinino
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U n8n -d alinino"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # --- Əsas ---
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      GENERIC_TIMEZONE: Asia/Baku
+      # --- n8n öz metadatasını Postgres-də saxlasın ---
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: alinino
+      DB_POSTGRESDB_USER: n8n
+      DB_POSTGRESDB_PASSWORD: n8n
+      # --- Code node-da built-in modullara icazə (opsional) ---
+      NODE_FUNCTION_ALLOW_BUILTIN: "*"
+      # --- Şifrələmə açarı: kredensiallar restart-dan sonra itməsin ---
+      # İSTEHSALATDA bu dəyəri öz təsadüfi açarınızla əvəz edin (bir dəfə yaradın, sabit saxlayın):
+      #   openssl rand -hex 24
+      N8N_ENCRYPTION_KEY: "change_me_1f3d9a7c2b6e40f8b5c1a2d3e4f50617"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  qdrant_data:
+  n8n_data:
