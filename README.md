@@ -1,11 +1,11 @@
 # Alinino RAG — Faza 1: Scraper + n8n Workflow
 
-Alinino.az kataloqu üzərində işləyən RAG chatbotun tam işlək skeleti.
+Alinino.az kataloqu üçün RAG chatbot prototipinin kodu və quraşdırma təlimatı. Repozitoriya işlək sistemin istehsal mühitində yayımlandığını və ya bütün kataloqun indeksləndiyini təsdiqləmir.
 Bu paket üç hissədən ibarətdir:
 
 | Hissə | Fayl | Nə edir |
 |-------|------|---------|
-| **Scraper** | `scraper/scraper.py` | 48k+ məhsulu yığır, təmizləyir, Postgres-ə yazır |
+| **Scraper** | `scraper/scraper.py` | Məhsulları toplamaq, təmizləmək və Postgres-ə yazmaq üçün nəzərdə tutulub; emal olunan say ayrıca ölçülməlidir |
 | **Sinxronizator** | `scraper/sync.py` | Yalnız dəyişənləri tapıb yeniləyir (delta) |
 | **İnfrastruktur** | `docker-compose.yml` | n8n + Postgres + Qdrant-ı bir əmrlə qaldırır |
 | **Workflow-lar** | `n8n/*.json` | İndeksləmə + Chat + Planlı yenilənmə |
@@ -22,6 +22,12 @@ Arxitektura: `Scraper → PostgreSQL → n8n (embed) → Qdrant` və
 - **Google Gemini API açarı** — pulsuz: <https://aistudio.google.com/apikey>
 
 ---
+
+## Hazırkı vəziyyət və yoxlama meyarı
+
+Bu repozitoriyada scraper, delta sinxronizatoru, Docker Compose konfiqurasiyası və n8n workflow JSON faylları var. İctimai repozitoriyada tamamlanmış crawl nəticəsi, Qdrant indeksi, işə salma jurnalı və ya sual-cavab keyfiyyəti ölçümü yoxdur. Buna görə **48k+ indekslənmiş məhsul**, istehsalda işləyən chatbot və ölçülmüş nəticə iddiası edilmir.
+
+Yoxlamaq üçün aşağıdakı demo quraşdırmasını işə salın, Postgres-də yazılan sətirlərin və Qdrant-da indekslənən obyektlərin sayını ölçün, sonra Azərbaycan və rus dillərində bir neçə sualı mənbə keçidləri ilə yoxlayın. Nəticələri yalnız həmin ölçmələrdən sonra qeyd edin. Workflow-ların importu, credentials və model bağlantısı ayrıca qurulmalıdır.
 
 ## 1. İnfrastrukturu qaldır
 
@@ -45,7 +51,7 @@ pip install psycopg2-binary          # Postgres-ə yazmaq üçün
 # Demo üçün 800 məhsul (Postgres-ə də yazır):
 python scraper.py --limit 800 --postgres
 
-# Tam kataloq (48k+, bir neçə saat):
+# Tam kataloqu toplamaq üçün (müddət və məhsul sayı mənbədən asılıdır):
 python scraper.py --postgres
 ```
 
