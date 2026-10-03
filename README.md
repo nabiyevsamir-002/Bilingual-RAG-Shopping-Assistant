@@ -27,7 +27,7 @@ Arxitektura: `Scraper → PostgreSQL → n8n (embed) → Qdrant` və
 
 Bu repozitoriyada scraper, delta sinxronizatoru, Docker Compose konfiqurasiyası və n8n workflow JSON faylları var. İctimai repozitoriyada tamamlanmış crawl nəticəsi, Qdrant indeksi, işə salma jurnalı və ya sual-cavab keyfiyyəti ölçümü yoxdur. Buna görə **48k+ indekslənmiş məhsul**, istehsalda işləyən chatbot və ölçülmüş nəticə iddiası edilmir.
 
-Yoxlamaq üçün aşağıdakı demo quraşdırmasını işə salın, Postgres-də yazılan sətirlərin və Qdrant-da indekslənən obyektlərin sayını ölçün, sonra Azərbaycan və rus dillərində bir neçə sualı mənbə keçidləri ilə yoxlayın. Nəticələri yalnız həmin ölçmələrdən sonra qeyd edin. Workflow-ların importu, credentials və model bağlantısı ayrıca qurulmalıdır.
+Yoxlamaq üçün aşağıdakı demo quraşdırmasını işə salın, Postgres-də yazılan sətirlərin və Qdrant-da indekslənən obyektlərin sayını ölçün, sonra Azərbaycan və rus dillərində bir neçə sualı mənbə keçidləri ilə yoxlayın. Nəticələri yalnız həmin ölçmələrdən sonra qeyd edin. Workflow-ların importu, giriş məlumatları və model bağlantısı ayrıca qurulmalıdır.
 
 ## 1. İnfrastrukturu qaldır
 
@@ -158,7 +158,7 @@ n8n versiyaları arasında kiçik fərqlər ola bilər. Import-dan sonra:
 Bilik bazasını canlı saxlayan iki komponent:
 
 - **`scraper/sync.py`** (host) — sitemap-dakı `<lastmod>` + məzmun hash-ı ilə
-  **yeni / dəyişən / silinən** məhsulları tapır. Bütün 48k-nı yenidən yığmır —
+  **yeni / dəyişən / silinən** məhsulları tapır. Bütün kataloqu yenidən yığmır —
   yalnız fərqi. Postgres-i işarələyir (`needs_embedding=true`), silinənləri
   Qdrant-dan çıxarır.
 - **`n8n/03-scheduled-sync-workflow.json`** — `Schedule Trigger` (hər 6 saat)
